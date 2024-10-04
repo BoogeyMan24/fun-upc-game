@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>UPC Fun Game!</title>
+
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+
+				width: 100vw;
+				height: 100vh;
+
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.container {
+				width: 25rem;
+				max-width: 80%;
+				height: 30rem;
+				border: 2px solid black;
+
+				padding: 15px;
+
+				overflow-y: auto;
+			}
+
+			.title {
+				text-align: center;
+			}
+
+			.upc-wrapper {
+				display: flex;
+				justify-content: center;
+			}
+
+			.upc {
+				display: inline;
+
+				font-size: large;
+			}
+
+			.button-container {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 1rem;
+			}
+
+			.info-text {
+				
+				text-align: center;
+			}
+
+			#first-digit, #first-five-digits {
+				margin-right: 1.5rem;
+			}
+
+			#last-digit {
+				margin-left: 1.5rem;
+			}
+
+			@media only screen and (max-width: 600px) {
+				.button-container {
+					flex-direction: column;
+				}
+			}
+		</style>
+
+		<script>
+			let score;
+			let highscore;
+
+			let firstDigit;
+			let firstFive;
+			let secondFive;
+			let lastDigit;
+
+			let infoText;
+
+			let input;
+			let submitBtn;
+			let revealBtn;
+			let refreshBtn;
+
+			let code;
+
+			let time = 0;
+			let timer;
+
+			document.addEventListener("DOMContentLoaded", function (event) { 
+				highscore = parseInt(localStorage.getItem("highscore")) ?? 0;
+				document.getElementById("highscore").innerHTML = highscore;
+
+				score = parseInt(localStorage.getItem("score")) ?? 0;
+				document.getElementById("score").innerHTML = score;
+
+				firstDigit = document.getElementById("first-digit");
+				firstFive = document.getElementById("first-five-digits");
+				secondFive = document.getElementById("second-five-digits");
+				lastDigit = document.getElementById("last-digit");
+
+				infoText = document.getElementById("info-text");
+
+				input = document.getElementById("input");
+				submitBtn = document.getElementById("submit");
+
+				revealBtn = document.getElementById("reveal");
+				refreshBtn = document.getElementById("refresh");
+
+				timer = document.getElementById("timer");
+
+				time = parseFloat(localStorage.getItem("time"));
+
+				code = localStorage.getItem("code")?.split("") ?? getRandomDigits();
+				codeUpdated();
+
+				document.getElementById("disabled").addEventListener("change", function (event) {
+					let checked = event.currentTarget.checked;
+
+					if (checked) {
+						revealBtn.setAttribute("disabled", true);
+						refreshBtn.setAttribute("disabled", true);
+					} else {
+						revealBtn.removeAttribute("disabled");
+						refreshBtn.removeAttribute("disabled");
+					}
+				})
+
+				document.addEventListener("keypress", function (event) {
+					if (event.key === "Enter") {
+						submit();
+					}
+				});
+
+				document.addEventListener("keyup", (e) => {
+					// check to see if the keypress was a number
+					if (/[0-9]/g.test(e.key)) {
+						// check to see if the input is not already focused
+						if (document.activeElement !== input) {
+							// focus element
+							input.focus();
+							// focus value
+							input.value = e.key;
+						}
+					}
+				});
+
+				input.addEventListener("input", function (event) {
+					let value = event.currentTarget.value;
+
+					if (/[^0-9]/.test(event.data)) {
+						input.value = value.replace(/[^0-9]/g, "")
+					} else {
+						input.value = event.data;
+					}
+				});
+
+
+				setInterval(() => {
+					if (submitted) {
+						return;
+					}
+
+					time += 0.1;
+					timer.innerText = time.toFixed(1);
+
+					localStorage.setItem("time", time);
+				}, 100);
+			});
+
+			function getRandomDigits() {
+				let randomNumbers = [];
+
+				for (let i = 0; i < 11; i++) {
+					randomNumbers.push(getRandomNumber());
+				}
+
+				let total = 0;
+				for (let i = 0; i < randomNumbers.length; i += 2) {
+					total += randomNumbers[i];
+				}
+
+				total *= 3;
+
+				for (let i = 1; i < randomNumbers.length; i += 2) {
+					total += randomNumbers[i];
+				}
+
+				const finalDigit = total % 10 != 0 ? 10 - total % 10 : 0;
+
+				randomNumbers.push(finalDigit);
+
+				code = randomNumbers;
+
+				localStorage.setItem("code", code.join(""));
+			}
+
+			function getRandomNumber() {
+				return Math.floor(Math.random() * 10);
+			}
+
+
+			function codeUpdated() {
+				firstDigit.innerHTML = code[0];
+				firstFive.innerHTML = code.slice(1, 6).join(" ");
+				secondFive.innerHTML = code.slice(6, 11).join(" ");
+				lastDigit.innerHTML = "?";
+			}
+
+			function reveal() {
+				if (submitted) {
+					return;
+				}
+
+				score = 0;
+				setScore(0);
+
+				disable();
+
+				lastDigit.innerHTML = code[11];
+
+				getRandomDigits();
+			}
+
+			function refresh() {
+				input.value = "";
+				time = 0;
+				timer.innerText = "0";
+
+				getRandomDigits();
+
+				enable();
+
+				codeUpdated();
+			}
+
+
+			let submitted = false;
+			function submit() {
+				infoText.style.color = "black";
+
+				if (submitted) {
+					refresh();
+					return;
+				}
+
+				if (input.value == "") {
+					return;
+				}
+
+				disable();
+
+				reveal();
+				
+
+				if (input.value == code[11]) {
+					console.log("before", score);
+					score += 1;
+					setScore(score);
+					console.log("after", score);
+
+					infoText.innerText = "You got it correct! Score: " + score;
+					infoText.style.color = "green";
+
+					lastDigit.innerHTML = code[11];
+
+					getRandomDigits();
+				} else {
+					infoText.innerText = "Wrong! Final Score: " + score;
+					infoText.style.color = "red";
+
+					score = 0;
+					setScore(0);
+				}
+			}
+
+			function setScore(newScore) {
+				if (newScore > highscore) {
+					highscore = newScore;
+
+					document.getElementById("highscore").innerText = highscore;
+
+					localStorage.setItem("highscore", highscore);
+				}
+
+				score = newScore;
+
+				document.getElementById("score").innerText = score;
+
+				localStorage.setItem("score", score);
+			}
+
+			function disable() {
+				input.setAttribute("readonly", true);
+				submitted = true;
+
+				submitBtn.innerText = "Next";
+			}
+
+			function enable() {
+				infoText.innerText = "";
+				submitBtn.innerText = "Submit";
+				input.removeAttribute("readonly");
+				submitted = false;
+			}
+		</script>
+	</head>
+	<body>
+		<div class="container">
+
+			<!-- <div style="text-align: center;">
+			<!-- insert your custom barcode setting your data in the GET parameter "data"
+				<img id="barcode" alt="Barcode Generator TEC-IT" src="https://barcode.tec-it.com/barcode.ashx?data=93962853658&code=UPCA"/>
+			</div>
+			<div style="padding-top:8px; text-align:right; display:flex; justify-content:space-evenly; font-size:10px; font-family: Source Sans Pro, Arial, sans-serif;">
+				<button onclick="getRandomDigits()">Refresh</button>
+				<a href="https://www.tec-it.com" title="Barcode Software by TEC-IT" target="_blank">
+					TEC-IT Barcode Generator<br/>
+				</a>
+			</div> -->
+
+			<div class="title-wrapper">
+				<h1 class="title">UPC Fun Game!</h1>
+			</div>
+			
+			<div class="upc-wrapper">
+				<h1 class="upc" id="first-digit">1</h1>
+				<h1 class="upc" id="first-five-digits">2 3 4 5 6</h1>
+				<h1 class="upc" id="second-five-digits">7 8 9 0 1</h1>
+				<h1 class="upc" id="last-digit">?</h1>
+			</div>
+			
+
+			<div class="button-container">
+				<button id="reveal" onclick="reveal()">Reveal</button>
+				<input id="input" type="text">
+				<button id="submit" onclick="submit()">Submit</button>
+				<button id="refresh" onclick="refresh()">Refresh</button>
+			</div>
+			
+			<div class="score-container">
+				<p>Current Score: <span id="score">0</span></p>
+				<p>Highscore: <span id="highscore">0</span></p>
+				<p>Timer: <span id="timer"></span>s</p>
+			</div>
+			
+			<p id="info-text" class="info-text"></p>
+
+			<p class="bottom-text">Revealing or refreshing resets your score!</p>
+			<p class="bottom-text">
+				Disable reveal/refresh:
+				<input id="disabled" type="checkbox">
+			</p>
+		</div>
+	</body>
+</html>
