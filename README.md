@@ -13,6 +13,7 @@ The rules are very simple:
 
 # Example Game
 <img width="507" alt="Screenshot 2024-10-04 at 15 27 15" src="https://github.com/user-attachments/assets/481f86b3-a26a-487f-bc89-854cb5650121">
+
 Start off by adding all the odd positioned numbers:
 8 + 3 + 8 + 7 + 5 + 0 = 31
 
