@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Sussy, pls github deploy this now -->
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
@@ -94,10 +93,10 @@
 			let timer;
 
 			document.addEventListener("DOMContentLoaded", function (event) { 
-				highscore = parseInt(localStorage.getItem("highscore")) ?? 0;
+				highscore = parseInt(localStorage.getItem("highscore")) || 0;
 				document.getElementById("highscore").innerHTML = highscore;
 
-				score = parseInt(localStorage.getItem("score")) ?? 0;
+				score = parseInt(localStorage.getItem("score")) || 0;
 				document.getElementById("score").innerHTML = score;
 
 				firstDigit = document.getElementById("first-digit");
@@ -115,9 +114,17 @@
 
 				timer = document.getElementById("timer");
 
-				time = parseFloat(localStorage.getItem("time"));
+				time = parseFloat(localStorage.getItem("time")) || 0;
 
-				code = localStorage.getItem("code")?.split("") ?? getRandomDigits();
+				code = localStorage.getItem("code");
+				if (code == null) {
+					getRandomDigits();	
+				}
+
+				if (typeof code == "string") {
+					code = code.split("");
+				}
+
 				codeUpdated();
 
 				document.getElementById("disabled").addEventListener("change", function (event) {
