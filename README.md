@@ -36,7 +36,7 @@ Since 9 isn't 0, we have to subtract it from 10
 
 The answer is 1!
 
-## I added a timer: My personal best is 14.7 seconds!
+## I added a timer: My personal best is 11.0 seconds!
 
 
 pssst... since you actually read the README here's a hint: just keep track of the last digit (don't overflow, eg. 8 + 5 = 3)
